@@ -1,0 +1,271 @@
+/**
+ * SAMBO BUDAPEST – foglalások + AI chatbot (Google Gemini)
+ * Foglalás: a honlap űrlapja és a chatbot is ide küldi az adatokat → "Foglalások" lap + e-mailek.
+ * Chatbot: a Gemini API kulcsot a Projektbeállítások → Szkripttulajdonságok alatt kell megadni:
+ *   tulajdonság: GEMINI_API_KEY   érték: (a Google AI Studio-ban kapott kulcs)
+ */
+
+const NOTIFY_EMAILS = "guda1970@gmail.com"; // ki kap értesítést (több cím vesszővel)
+const COPY_OWNER = true;                     // a táblázat tulajdonosa másolatot kap
+const REPLY_TO = "guda1970@gmail.com";       // a jelentkező erre a címre tud válaszolni
+const PHONE = "06 70 774 1288";
+const SHEET_NAME = "Foglalások";
+const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-2.0-flash"];
+
+// Egyszer futtasd: engedélyt kér a táblázathoz, az e-mailhez és a külső kérésekhez.
+function setup() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  if (!sh) throw new Error('Nincs "' + SHEET_NAME + '" nevű lap.');
+  MailApp.getRemainingDailyQuota();
+  UrlFetchApp.fetch("https://www.google.com", { muteHttpExceptions: true });
+  const key = PropertiesService.getScriptProperties().getProperty("GEMINI_API_KEY");
+  Logger.log("Rendben. Gemini kulcs " + (key ? "beállítva." : "MÉG NINCS beállítva."));
+}
+
+/* ======================= HTTP ======================= */
+
+function doPost(e) {
+  let p = (e && e.parameter) || {};
+  // a chatbot JSON-t küld text/plain-ként
+  if (e && e.postData && e.postData.contents && /^\s*\{/.test(e.postData.contents)) {
+    try { p = Object.assign({}, p, JSON.parse(e.postData.contents)); } catch (err) {}
+  }
+  if (p.action === "chat") return json(handleChat(p));
+  if (p.website) return json({ ok: true });            // spam-csapda
+  const r = normalizeBooking(p);
+  if (!r.name || !r.phone) return json({ ok: false, error: "missing" });
+  saveBooking(r);
+  return json({ ok: true });
+}
+
+function doGet() { return json({ ok: true, service: "sambo-foglalas" }); }
+
+/* ======================= FOGLALÁS ======================= */
+
+function normalizeBooking(p) {
+  return {
+    name: clean(p.name, 80), phone: clean(p.phone, 40), email: clean(p.email, 120),
+    plan: clean(p.plan, 40) || "Csoportos", slot: clean(p.slot, 90),
+    callback: /^(igen|true|yes)$/i.test(String(p.callback || "")) ? "Igen" : "Nem",
+    style: clean(p.style, 40), level: clean(p.level, 40), message: clean(p.message, 1500)
+  };
+}
+
+function saveBooking(r) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  let url = "";
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    url = ss.getUrl();
+    ss.getSheetByName(SHEET_NAME).appendRow([new Date(), "Új", safe(r.name), safe(r.phone), safe(r.email),
+      safe(r.plan), safe(r.slot), r.callback, safe(r.style), safe(r.level), safe(r.message), ""]);
+  } finally {
+    lock.releaseLock();
+  }
+  try { notifyCoach(r, url); } catch (err) { console.error(err); }
+  try { confirmApplicant(r); } catch (err) { console.error(err); }
+}
+
+function notifyCoach(r, url) {
+  const owner = Session.getEffectiveUser().getEmail();
+  const to = NOTIFY_EMAILS || owner;
+  const body = [
+    "Új jelentkezés érkezett a sambobudapest.hu oldalról.", "",
+    "Név: " + r.name,
+    "Telefon: " + r.phone,
+    "E-mail: " + (r.email || "–"),
+    "Edzés: " + r.plan,
+    "Kért időpont: " + (r.slot || "–"),
+    "Visszahívást kér: " + r.callback,
+    "Érdeklődés: " + (r.style || "–"),
+    "Tapasztalat: " + (r.level || "–"),
+    "Üzenet: " + (r.message || "–"), "",
+    "Összes jelentkezés: " + url
+  ].join("\n");
+  const opts = { to: to, subject: (r.callback === "Igen" ? "📞 " : "") + "Új jelentkezés: " + r.name + " – " + r.plan,
+                 body: body, name: "Sambo Budapest honlap" };
+  if (r.email) opts.replyTo = r.email;
+  if (COPY_OWNER && owner && to.indexOf(owner) === -1) opts.cc = owner;
+  MailApp.sendEmail(opts);
+}
+
+function confirmApplicant(r) {
+  if (!r.email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(r.email)) return;
+  const text = [
+    "Kedves " + r.name + "!", "",
+    "Köszönjük a jelentkezésed, megkaptuk. Hamarosan jelentkezünk, amint tudunk, keresünk.", "",
+    "A jelentkezésed:",
+    "Edzés: " + r.plan,
+    "Kért időpont: " + (r.slot || "egyeztetjük"), "",
+    "Ha 2 napon belül nem kapsz választ, keress minket nyugodtan telefonon: " + PHONE, "",
+    "Helyszín: Lurdy Ház, Kathi Béla – The Legend, 1097 Budapest, Könyves Kálmán krt. 12–14.", "",
+    "Találkozunk a szőnyegen!",
+    "Valentin Evgenievich",
+    "Sambo Budapest · sambobudapest.hu"
+  ].join("\n");
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const html =
+    '<div style="background:#0b0b0b;padding:28px 0;font-family:Arial,Helvetica,sans-serif">' +
+    '<div style="max-width:560px;margin:0 auto;background:#ffffff">' +
+    '<div style="background:#d20a0a;color:#fff;padding:22px 28px;font-size:22px;font-weight:900;letter-spacing:1px">САМБО · SAMBO BUDAPEST</div>' +
+    '<div style="padding:28px;color:#111;font-size:15px;line-height:1.6">' +
+    '<p style="margin:0 0 14px">Kedves ' + esc(r.name) + '!</p>' +
+    '<p style="margin:0 0 18px"><b>Köszönjük a jelentkezésed, megkaptuk.</b> Hamarosan jelentkezünk, amint tudunk, keresünk.</p>' +
+    '<table style="width:100%;border-collapse:collapse;margin:0 0 18px;font-size:14px">' +
+    '<tr><td style="padding:8px 10px;background:#f3f3f3;width:120px"><b>Edzés</b></td><td style="padding:8px 10px;background:#f9f9f9">' + esc(r.plan) + '</td></tr>' +
+    '<tr><td style="padding:8px 10px;background:#f3f3f3"><b>Időpont</b></td><td style="padding:8px 10px;background:#f9f9f9">' + esc(r.slot || "egyeztetjük") + '</td></tr>' +
+    '</table>' +
+    '<p style="margin:0 0 18px;padding:12px 14px;border-left:4px solid #d20a0a;background:#fff4f4">Ha 2 napon belül nem kapsz választ, keress minket nyugodtan telefonon: <b>' + PHONE + '</b></p>' +
+    '<p style="margin:0 0 6px;color:#555;font-size:13px">Helyszín: Lurdy Ház, Kathi Béla – The Legend<br>1097 Budapest, Könyves Kálmán krt. 12–14.</p>' +
+    '<p style="margin:22px 0 0">Találkozunk a szőnyegen!<br><b>Valentin Evgenievich</b><br><span style="color:#777">Sambo Budapest · sambobudapest.hu</span></p>' +
+    '</div></div></div>';
+  MailApp.sendEmail({ to: r.email, subject: "Megkaptuk a jelentkezésed – Sambo Budapest", body: text,
+                      htmlBody: html, name: "Sambo Budapest", replyTo: REPLY_TO });
+}
+
+/* ======================= CHATBOT ======================= */
+
+function upcomingGroupSessions(n) {
+  const days = ["vasárnap", "hétfő", "kedd", "szerda", "csütörtök", "péntek", "szombat"];
+  const out = [];
+  const now = new Date();
+  const hour = Number(Utilities.formatDate(now, "Europe/Budapest", "H"));
+  const d = new Date(now.getTime());
+  if (hour >= 18) d.setDate(d.getDate() + 1);
+  while (out.length < n) {
+    const wd = Number(Utilities.formatDate(d, "Europe/Budapest", "u")) % 7; // 1=hétfő … 7=vasárnap → 0
+    if (wd === 1 || wd === 3 || wd === 5) {
+      out.push(days[wd] + " " + Utilities.formatDate(d, "Europe/Budapest", "yyyy.MM.dd.") + " 19:00–21:00");
+    }
+    d.setDate(d.getDate() + 1);
+  }
+  return out;
+}
+
+function systemPrompt() {
+  const today = Utilities.formatDate(new Date(), "Europe/Budapest", "yyyy.MM.dd. (EEEE) HH:mm");
+  return [
+    "Te a Sambo Budapest (sambobudapest.hu) honlapjának asszisztense vagy. Valentin Evgenievich szambó mesteredző edzéseiről adsz tájékoztatást, és edzésfoglalást veszel fel.",
+    "Mai dátum és idő (Budapest): " + today + ".",
+    "",
+    "STÍLUS: Röviden, közvetlenül, tegezve válaszolj (2–4 mondat). Magabiztos, sportos hang, de nem nyomulós. Abban a nyelvben válaszolj, amin írnak (magyar, angol, orosz stb.). Ne használj markdown címeket; listát csak ha tényleg kell.",
+    "Csak a lenti tényekre támaszkodj. Ha valamit nem tudsz (pl. terembelépő ára, korhatár, parkolás díja), mondd meg őszintén, és ajánld fel, hogy Valentin visszahív, vagy hívják: " + PHONE + ".",
+    "Orvosi kérdésben (sérülés, betegség) ne adj tanácsot: javasold, hogy beszéljenek orvossal, és edzés előtt jelezzék Valentinnak.",
+    "",
+    "TÉNYEK:",
+    "- Edző: Valentin Evgenievich, sambo mesteredző (Sambo Training Hungary). Kis csoport, személyes javítás.",
+    "- Helyszín: Lurdy Ház, Kathi Béla – The Legend edzőterem (2000+ m², külön küzdősport-központ az 1. emeleten), 1097 Budapest, Könyves Kálmán krt. 12–14. A Lurdy Házban van parkoló.",
+    "- Csoportos edzés: hétfő, szerda, péntek 19:00–21:00, legfeljebb 6 fő. Csoportos bérlet: 35 000 Ft/hó (heti 3 edzés). Egyedül is lehet jönni, beosztják egy csoportba.",
+    "- Privát edzés: 10 000 Ft / 2 óra, hétfőtől szombatig 06:00 és 16:00 között, egyeztetett időpontban.",
+    "- Felkészítő erőnléti edzés: ára egyeztetés alapján (erő, robbanékonyság, állóképesség; versenyre, meccsre, alapozásra).",
+    "- Mit hozzanak: sportruha, víz, törölköző. Szambókabát (kurtka) és szambócipő csak később kell.",
+    "- Előzetes tapasztalat nem kell, a legtöbben nulláról kezdenek. Kemény edzés, de fokozatosan épül fel, partnerrel, kontrollált tempóban.",
+    "- Ágak: sport szambó (dobások, lábfeszítések, karfeszítések, leszorítások; fojtás nincs), kombat szambó (teljes kontakt: ütés, rúgás, könyök, térd, dobás, fojtás, földharc; sisak, MMA-kesztyű, lábszárvédő), közelharc.",
+    "- A szambó a Szovjetunióban alakult ki az 1920–30-as években, 1938 óta hivatalos sportág, 1973 óta vannak világbajnokságok. Ismert szambós hátterű MMA-bajnokok: Fjodor Jemeljanyenko, Habib Nurmagomedov, Iszlam Mahacsev.",
+    "- Kapcsolat: telefon " + PHONE + ", e-mail guda1970@gmail.com.",
+    "- A következő csoportos edzések: " + upcomingGroupSessions(6).join("; ") + ".",
+    "",
+    "FOGLALÁS: Ha valaki edzésre szeretne jelentkezni vagy visszahívást kér, gyűjtsd össze beszélgetve, egyszerre legfeljebb 1–2 kérdéssel:",
+    "1) név (kötelező), 2) telefonszám (kötelező), 3) edzésforma: Csoportos / Privát / Erőnléti felkészítés, 4) időpont (csoportosnál a fenti listából; privátnál nap + idősáv 06–16 között; ha nem tudja, 'egyeztetjük'), 5) kér-e visszahívást, 6) e-mail cím (nem kötelező, ide megy a visszaigazolás), 7) tapasztalat és megjegyzés (nem kötelező).",
+    "Mielőtt rögzíted, foglald össze egy mondatban és kérj megerősítést. Csak kifejezett igen után hívd meg a create_booking függvényt. Telefonszámot és nevet soha ne találj ki.",
+    "Sikeres rögzítés után mondd el, hogy Valentin hamarosan jelentkezik, és ha megadott e-mailt, oda visszaigazolás megy."
+  ].join("\n");
+}
+
+const BOOKING_TOOL = {
+  functionDeclarations: [{
+    name: "create_booking",
+    description: "Edzésfoglalás rögzítése a táblázatba, miután a felhasználó megerősítette az adatokat.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        name: { type: "STRING", description: "A jelentkező teljes neve" },
+        phone: { type: "STRING", description: "Telefonszám" },
+        email: { type: "STRING", description: "E-mail cím, ha megadta" },
+        plan: { type: "STRING", description: "Csoportos, Privát vagy Erőnléti felkészítés" },
+        slot: { type: "STRING", description: "Kért időpont szövegesen, vagy 'egyeztetjük'" },
+        callback: { type: "BOOLEAN", description: "Kér-e visszahívást" },
+        level: { type: "STRING", description: "Tapasztalat (pl. Kezdő)" },
+        style: { type: "STRING", description: "Mi érdekli (Sport szambó, Kombat szambó, Közelharc, MMA, Erőnlét)" },
+        message: { type: "STRING", description: "Egyéb megjegyzés" }
+      },
+      required: ["name", "phone", "plan"]
+    }
+  }]
+};
+
+function handleChat(p) {
+  const fallback = "Most nem tudok válaszolni, bocsi. Hívd Valentint: " + PHONE + ", vagy foglalj az oldalon lévő űrlappal.";
+  const key = PropertiesService.getScriptProperties().getProperty("GEMINI_API_KEY");
+  if (!key) return { ok: false, reply: fallback, error: "no_key" };
+
+  // egyszerű védelem a túlhasználat ellen
+  const cache = CacheService.getScriptCache();
+  const bucket = "rate_" + Math.floor(Date.now() / 60000);
+  const count = Number(cache.get(bucket) || 0);
+  if (count > 40) return { ok: false, reply: "Most sokan írnak, próbáld újra egy perc múlva, vagy hívd: " + PHONE };
+  cache.put(bucket, String(count + 1), 120);
+
+  let msgs = [];
+  try { msgs = Array.isArray(p.messages) ? p.messages : JSON.parse(p.messages || "[]"); } catch (err) {}
+  msgs = msgs.slice(-20).filter(m => m && (m.role === "user" || m.role === "assistant") && m.text)
+             .map(m => ({ role: m.role === "user" ? "user" : "model", parts: [{ text: String(m.text).slice(0, 1500) }] }));
+  if (!msgs.length || msgs[msgs.length - 1].role !== "user") return { ok: false, reply: fallback };
+
+  const base = { systemInstruction: { parts: [{ text: systemPrompt() }] }, tools: [BOOKING_TOOL],
+                 generationConfig: { temperature: 0.4, maxOutputTokens: 600 } };
+  let res = callGemini(key, Object.assign({ contents: msgs }, base));
+  if (!res) return { ok: false, reply: fallback };
+
+  const parts = (((res.candidates || [])[0] || {}).content || {}).parts || [];
+  const call = parts.map(x => x.functionCall).filter(Boolean)[0];
+  if (call && call.name === "create_booking") {
+    const a = call.args || {};
+    const r = normalizeBooking({
+      name: a.name, phone: a.phone, email: a.email, plan: a.plan, slot: a.slot || "egyeztetjük",
+      callback: a.callback ? "Igen" : "Nem", style: a.style, level: a.level,
+      message: "[Chatbot] " + (a.message || "")
+    });
+    if (!r.name || !r.phone) return { ok: true, reply: "Ehhez még kell a neved és a telefonszámod." };
+    saveBooking(r);
+    const follow = msgs.concat([
+      { role: "model", parts: [{ functionCall: call }] },
+      { role: "user", parts: [{ functionResponse: { name: "create_booking", response: { ok: true, saved: true } } }] }
+    ]);
+    const res2 = callGemini(key, Object.assign({ contents: follow }, base));
+    const t2 = textOf(res2) || ("Rögzítettem a foglalásod, " + r.name + "! Valentin hamarosan keres a megadott számon." +
+                                (r.email ? " A visszaigazolást elküldtük e-mailben." : ""));
+    return { ok: true, reply: t2, booked: true };
+  }
+  return { ok: true, reply: textOf(res) || fallback };
+}
+
+function callGemini(key, payload) {
+  for (const model of GEMINI_MODELS) {
+    const url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent";
+    const resp = UrlFetchApp.fetch(url, {
+      method: "post", contentType: "application/json", muteHttpExceptions: true,
+      headers: { "x-goog-api-key": key }, payload: JSON.stringify(payload)
+    });
+    const code = resp.getResponseCode();
+    if (code === 200) return JSON.parse(resp.getContentText());
+    console.error("Gemini " + model + " " + code + ": " + resp.getContentText().slice(0, 300));
+    if (code !== 404 && code !== 400) break;
+  }
+  return null;
+}
+
+function textOf(res) {
+  if (!res) return "";
+  const parts = (((res.candidates || [])[0] || {}).content || {}).parts || [];
+  return parts.map(x => x.text || "").join("").trim();
+}
+
+/* ======================= SEGÉD ======================= */
+
+function clean(v, n) { return String(v == null ? "" : v).replace(/\s+/g, " ").trim().slice(0, n); }
+function safe(v) { return /^[=+\-@]/.test(v) ? "'" + v : v; }
+function json(o) {
+  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+}
