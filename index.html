@@ -354,6 +354,47 @@ footer .rail{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
   .callbar .bk{flex:1;padding-right:env(safe-area-inset-right,0px)}
 }
 
+/* chatbot */
+.callbar .ch{background:#1a1a1a;color:#fff;font-size:1.1rem;border-left:1px solid #2b2b2b;border-right:1px solid #2b2b2b}
+.callbar .ch .dot{width:8px;height:8px;border-radius:50%;background:#2ecc71;box-shadow:0 0 0 3px rgba(46,204,113,.25)}
+@media (min-width:761px){.callbar .ch{padding:14px 18px}}
+@media (max-width:760px){.callbar .ch{flex:1}.callbar .call b{display:none}.callbar .call small{font-size:1.15rem;letter-spacing:.06em;opacity:1}.callbar .bk{font-size:1rem}.callbar a{gap:8px}}
+.chat{position:fixed;z-index:70;display:flex;flex-direction:column;background:#0f0f0f;border:1px solid #2b2b2b;box-shadow:0 30px 70px rgba(0,0,0,.7);transform:translateY(20px);opacity:0;pointer-events:none;transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .3s}
+.chat.open{transform:none;opacity:1;pointer-events:auto}
+@media (min-width:761px){.chat{right:calc(24px + env(safe-area-inset-right,0px));bottom:calc(96px + env(safe-area-inset-bottom,0px));width:390px;height:min(620px,calc(100vh - 140px))}}
+@media (max-width:760px){.chat{left:0;right:0;top:env(safe-area-inset-top,0px);bottom:var(--callbar);border:0}}
+.chat-h{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#000;border-bottom:3px solid var(--red)}
+.chat-h .av{width:38px;height:38px;flex:none;background:var(--red);display:grid;place-items:center;font-family:var(--cyr);font-size:.8rem}
+.chat-h b{display:block;font-family:var(--display);font-weight:900;font-size:1.25rem;text-transform:uppercase;line-height:1}
+.chat-h small{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.78rem}
+.chat-h small i{width:7px;height:7px;border-radius:50%;background:#2ecc71}
+.chat-h button{margin-left:auto;background:none;border:0;color:#fff;font-size:1.6rem;line-height:1;cursor:pointer;padding:4px 8px}
+.chat-b{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;overscroll-behavior:contain}
+.msg{max-width:86%;padding:10px 13px;font-size:.95rem;line-height:1.45;white-space:pre-wrap;word-wrap:break-word}
+.msg.bot{background:#1d1d1d;align-self:flex-start;border-left:3px solid var(--red)}
+.msg.me{background:var(--red);align-self:flex-end}
+.msg a{color:#fff;font-weight:800}
+.msg.ok{background:#12301c;border-left-color:#2ecc71}
+.typing{align-self:flex-start;background:#1d1d1d;padding:12px 14px;display:flex;gap:5px}
+.typing i{width:7px;height:7px;border-radius:50%;background:#888;animation:blink 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.chips-q{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 10px}
+.chips-q button{font:inherit;font-size:.82rem;font-weight:700;background:transparent;color:#ddd;border:1px solid #333;padding:7px 10px;cursor:pointer}
+.chips-q button:hover{border-color:var(--red);color:#fff}
+.chat-f{display:flex;gap:8px;padding:12px;border-top:1px solid #222;background:#0a0a0a}
+.chat-f textarea{flex:1;min-height:44px;max-height:120px;resize:none;font:inherit;font-size:.95rem;background:#161616;color:#fff;border:1.5px solid #2b2b2b;padding:11px 12px;border-radius:0}
+.chat-f textarea:focus{outline:none;border-color:var(--red)}
+.chat-f button{background:var(--red);color:#fff;border:0;width:48px;cursor:pointer;display:grid;place-items:center}
+.chat-f button:disabled{opacity:.5}
+.chat-f svg{width:20px;height:20px}
+.chat-note{font-size:.7rem;color:#666;text-align:center;padding:0 12px 10px;background:#0a0a0a}
+.askbot{display:flex;align-items:center;gap:12px;padding:16px 18px;background:#141414;border:1px solid var(--line);cursor:pointer;text-align:left;font:inherit;color:#fff;width:100%}
+.askbot:hover{border-color:var(--red)}
+.askbot .av{width:36px;height:36px;flex:none;background:var(--red);display:grid;place-items:center;font-family:var(--cyr);font-size:.75rem}
+.askbot b{display:block;font-family:var(--display);font-weight:900;font-size:1.2rem;text-transform:uppercase;line-height:1}
+.askbot span{color:var(--muted);font-size:.88rem}
+
 /* reveal (content visible at rest) */
 .rv.in{animation:rise .7s cubic-bezier(.2,.8,.2,1) both}
 </style>
@@ -586,6 +627,7 @@ footer .rail{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
         <a class="callbig" href="tel:+36707741288"><span>Hívd Valentint</span><strong>06 70 774 1288</strong></a>
         <div class="b-row"><span class="l">E-mail</span><div class="v"><a href="mailto:guda1970@gmail.com">guda1970@gmail.com</a><button class="copy" type="button" data-copy="guda1970@gmail.com">Másolás</button></div></div>
         <div class="b-row"><span class="l">Helyszín</span><div class="v">Lurdy Ház, 1097 Budapest, Könyves Kálmán krt. 12–14.</div></div>
+        <button type="button" class="askbot" data-chat><span class="av">САМ</span><span><b>Inkább beszélgetnél?</b><span>Kérdezd az asszisztenst, ő is felveszi a foglalást.</span></span></button>
         <div class="steps"><div>Foglalsz</div><div>Valentin visszahív</div><div>Jössz sportruhában</div></div>
       </div>
 
@@ -655,7 +697,16 @@ footer .rail{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
 
 <div class="callbar" id="callbar">
   <a class="call" href="tel:+36707741288" aria-label="Hívás: 06 70 774 1288"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg><span><small>Hívás</small><b>06 70 774 1288</b></span></a>
+  <a class="ch" href="#chat" id="chatOpen" aria-label="Chat az asszisztenssel"><span class="dot"></span>Chat</a>
   <a class="bk" href="#foglalas">Foglalás</a>
+</div>
+
+<div class="chat" id="chat" role="dialog" aria-label="Sambo asszisztens" aria-hidden="true">
+  <div class="chat-h"><span class="av">САМ</span><div><b>Sambo asszisztens</b><small><i></i>Válaszol és foglal, éjjel-nappal</small></div><button type="button" id="chatClose" aria-label="Bezárás">×</button></div>
+  <div class="chat-b" id="chatBody" aria-live="polite"></div>
+  <div class="chips-q" id="chatChips"></div>
+  <form class="chat-f" id="chatForm"><textarea id="chatInput" rows="1" placeholder="Írj egy kérdést…" aria-label="Üzenet"></textarea><button type="submit" id="chatSend" aria-label="Küldés"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 21 12 3 3.5v6.6L15 12 3 13.9z"/></svg></button></form>
+  <div class="chat-note">AI asszisztens · fontos ügyben hívd: 06 70 774 1288</div>
 </div>
 
 <script>
@@ -732,6 +783,117 @@ footer .rail{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
       .catch(function(){btn.disabled=false;btn.textContent="Foglalás elküldése";showDone(false)});
   });
   document.getElementById("copyMsg").addEventListener("click",function(){var p=document.getElementById("msg");copy(p.textContent,this,p)});
+
+
+  // ===== CHATBOT =====
+  (function(){
+    var panel=document.getElementById("chat"),body=document.getElementById("chatBody"),form=document.getElementById("chatForm"),
+        input=document.getElementById("chatInput"),send=document.getElementById("chatSend"),chips=document.getElementById("chatChips");
+    var msgs=[],busy=false,aiOff=false,flow=null,KEY="sambo_chat_v2";
+    var TEL="06 70 774 1288";
+    var GREET="Szia! A Sambo Budapest asszisztense vagyok. Kérdezz az edzésekről, árakról, a teremről, vagy foglalj nálam időpontot.";
+    var START=["Mikor vannak edzések?","Mennyibe kerül?","Foglalnék edzést","Kezdő vagyok, jöhetek?"];
+    function esc(t){return String(t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+    function fmt(t){return esc(t).replace(/(\+36|06)[\s-]?70[\s-]?774[\s-]?1288/g,'<a href="tel:+36707741288">$&</a>').replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")}
+    function add(role,text,cls){var d=document.createElement("div");d.className="msg "+(role==="user"?"me":"bot")+(cls?" "+cls:"");d.innerHTML=fmt(text);body.appendChild(d);body.scrollTop=body.scrollHeight}
+    function setChips(list){chips.innerHTML="";(list||[]).forEach(function(t){var b=document.createElement("button");b.type="button";b.textContent=t;b.addEventListener("click",function(){ask(t)});chips.appendChild(b)});chips.hidden=!(list&&list.length);body.scrollTop=body.scrollHeight}
+    function save(){try{sessionStorage.setItem(KEY,JSON.stringify({m:msgs,f:flow}))}catch(e){}}
+    function load(){try{var v=JSON.parse(sessionStorage.getItem(KEY)||"null");if(v&&Array.isArray(v.m)){msgs=v.m;flow=v.f||null}}catch(e){}}
+    function render(){body.innerHTML="";add("assistant",GREET);msgs.forEach(function(m){add(m.role,m.text,m.cls)});setChips(msgs.length?(flow&&flow.chips)||[]:START)}
+    function open(e){if(e)e.preventDefault();panel.classList.add("open");panel.setAttribute("aria-hidden","false");setTimeout(function(){input.focus()},250)}
+    function close(){panel.classList.remove("open");panel.setAttribute("aria-hidden","true")}
+    document.getElementById("chatOpen").addEventListener("click",function(e){panel.classList.contains("open")?(e.preventDefault(),close()):open(e)});
+    document.getElementById("chatClose").addEventListener("click",close);
+    document.querySelectorAll("[data-chat]").forEach(function(b){b.addEventListener("click",open)});
+    addEventListener("keydown",function(e){if(e.key==="Escape")close()});
+
+    /* --- helyi tudás (AI kulcs nélkül is működik) --- */
+    var DN=["vasárnap","hétfő","kedd","szerda","csütörtök","péntek","szombat"],MN=["jan.","febr.","márc.","ápr.","máj.","jún.","júl.","aug.","szept.","okt.","nov.","dec."];
+    function nextGroup(n){var o=[],now=new Date(),d=new Date(now.getFullYear(),now.getMonth(),now.getDate());if(now.getHours()>=18)d.setDate(d.getDate()+1);
+      while(o.length<n){var k=d.getDay();if(k===1||k===3||k===5)o.push(DN[k].charAt(0).toUpperCase()+DN[k].slice(1)+", "+MN[d.getMonth()]+" "+d.getDate()+". 19:00");d.setDate(d.getDate()+1)}return o}
+    function norm(t){return String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")}
+    var BOOK_RX=/foglal|jelentkez|jonnek|jonni|probaedz|beiratkoz|szeretnek jonni|visszahiv|idopontot ker/;
+    var KB=[
+      {rx:/^(szia|hello|helo|hali|jo napot|udv|hi)\b/,a:"Szia! Miben segíthetek? Kérdezhetsz az edzésekről, árakról, vagy foglalhatsz időpontot.",c:START},
+      {rx:/koszon|kosz|thx|thanks/,a:"Szívesen! Ha bármi kérdésed van, írj nyugodtan. Találkozunk a szőnyegen!"},
+      {rx:/telefon|szam\b|szama|email|e-mail|eleri|kapcsolat/,a:"Valentin elérhetősége: telefon "+TEL+", e-mail guda1970@gmail.com. Itt a chatben is foglalhatsz.",c:["Foglalnék edzést"]},
+      {rx:/eronlet|kondi|felkeszit/,a:"Felkészítő erőnléti edzés is van: erő, robbanékonyság, állóképesség, versenyre vagy alapozásra. Az ára egyeztetés alapján megy, ezt Valentinnal beszéled meg. Foglalsz rá egy időpontot?",c:["Foglalnék erőnlétire","Mennyibe kerül a privát?"]},
+      {rx:/privat|egyeni|szemelyi|negyszem/,a:"Privát edzés: 10 000 Ft / 2 óra, hétfőtől szombatig 06:00 és 16:00 között, egyeztetett időpontban. Négyszemközt Valentinnal, a te célodra szabva.",c:["Foglalnék privát edzést","Mikor vannak a csoportosok?"]},
+      {rx:/\bar\b|arak|mennyi|kerul|berlet|forint|\bft\b|dij|fizet/,a:"Csoportos bérlet: 35 000 Ft/hó (heti 3 edzés: H · Sz · P 19:00–21:00). Privát edzés: 10 000 Ft / 2 óra. Erőnléti felkészítés: egyeztetés alapján.",c:["Foglalnék edzést","Mikor vannak edzések?"]},
+      {rx:/mikor|idopont|hany ora|hanykor|napok|orarend|hetfo|szerda|pentek|este/,a:function(){return "Csoportos edzés hétfőn, szerdán és pénteken 19:00–21:00. A legközelebbiek: "+nextGroup(3).join(", ")+". Privát edzés hétköznap és szombaton 06:00–16:00 között, egyeztetve."},c:["Foglalnék edzést","Mennyibe kerül?"]},
+      {rx:/hol |hol\?|^hol|cim|terem|lurdy|helyszin|parkol|odajut|megkozelit|villamos|metro/,a:"A Lurdy Házban, a Kathi Béla – The Legend edzőteremben (külön küzdősport-központ az 1. emeleten). Cím: 1097 Budapest, Könyves Kálmán krt. 12–14. A Lurdy Házban van parkoló.",c:["Mikor vannak edzések?","Foglalnék edzést"]},
+      {rx:/kezdo|tapasztalat|elso edz|nullarol|soha nem|meg nem|jöhetek|johetek|tudok-e|kepes/,a:"Persze! Tapasztalat nem kell, a legtöbben nulláról kezdik. Az alapoktól építjük fel: esés, alapállás, dobások. Kemény, de fokozatos, partnerrel, kontrollált tempóban.",c:["Mit hozzak?","Foglalnék edzést"]},
+      {rx:/hozzak|hozni|ruha|felszereles|cipo|kabat|kurtka|kesztyu/,a:"Elég egy sportruha, víz és törölköző. Szambókabátra (kurtka) és szambócipőre csak később lesz szükség, ebben Valentin segít.",c:["Foglalnék edzést"]},
+      {rx:/valentin|edzo|mester|ki tart|ki az/,a:"Az edző Valentin Evgenievich, sambo mesteredző (Sambo Training Hungary). Kis csoportban dolgozik, mindenki személyes javítást kap.",c:["Foglalnék edzést","Mikor vannak edzések?"]},
+      {rx:/kombat|combat|utes|rugas|mma|ufc|khabib|habib|fedor|jemeljanyenko/,a:"A kombat szambó a teljes kontaktos ág: ütés, rúgás, könyök, térd, dobás, fojtás és földharc, sisakban és MMA-kesztyűben. Sok MMA-bajnoknak szambós a háttere, például Fjodor Jemeljanyenko, Habib Nurmagomedov és Iszlam Mahacsev.",c:["Foglalnék edzést","Kezdő vagyok, jöhetek?"]},
+      {rx:/judo|dzsudo|birkoz|bjj|jiu/,a:"A szambó rokona a dzsúdónak és a birkózásnak, de keményebb: megengedettek a lábfeszítések, szabadabbak a lábtámadások, a kombat ágban pedig ütés és rúgás is van."},
+      {rx:/szambo|sambo|mi ez|mit jelent|tortenet|szovjet|orosz/,a:"A szambó a Szovjetunióban alakult ki az 1920–30-as években, és 1938 óta hivatalos sportág. Dobások, feszítések, fojtások és földharc, a kombat ágban ütés és rúgás is. 1973 óta vannak világbajnokságok.",c:["Mi a kombat szambó?","Foglalnék edzést"]},
+      {rx:/\b(kor|korhatar|hany eves|gyerek|gyerekek|idos|lany|lanyok|no|nok|noi)\b/,a:"Erre nem tudok pontos választ adni. Kérdezd meg Valentint telefonon: "+TEL+", vagy foglalj, és visszahív.",c:["Foglalnék edzést"]},
+      {rx:/serul|fajdalom|\bterd|\bhat\b|beteg|orvos|mutet/,a:"Egészségügyi kérdésben orvos tud biztos választ adni. Edzés előtt mindenképp jelezd Valentinnak, hogy figyelembe tudja venni. Telefon: "+TEL+"."}
+    ];
+    function localAnswer(t){var n=norm(t);for(var i=0;i<KB.length;i++){if(KB[i].rx.test(n)){var a=KB[i].a;return{text:typeof a==="function"?a():a,chips:KB[i].c||[]}}}
+      return{text:"Erre most nem tudok pontos választ adni. Hívd Valentint: "+TEL+", vagy foglalj itt, és visszahív.",chips:["Foglalnék edzést","Mikor vannak edzések?","Mennyibe kerül?"]}}
+
+    /* --- foglalás lépésről lépésre --- */
+    function startFlow(t){
+      var n=norm(t||""),plan=/privat|egyeni/.test(n)?"Privát":/eronlet|felkeszit/.test(n)?"Erőnléti felkészítés":/csoport/.test(n)?"Csoportos":"";
+      flow={step:plan?"slot":"plan",d:{plan:plan}};return flowAsk()}
+    function flowAsk(){var f=flow,d=f.d,r;
+      if(f.step==="plan")r={text:"Szuper! Milyen edzésre jönnél?",chips:["Csoportos","Privát","Erőnléti felkészítés"]};
+      else if(f.step==="slot")r=d.plan==="Csoportos"?{text:"Melyik edzésre jössz?",chips:nextGroup(4).concat(["Még nem tudom"])}:{text:"Melyik nap és nagyjából hánykor lenne jó? (06:00 és 16:00 között)",chips:["Egyeztessük telefonon"]};
+      else if(f.step==="name")r={text:"Hogy hívnak?",chips:[]};
+      else if(f.step==="phone")r={text:"Mi a telefonszámod? Ezen hív vissza Valentin.",chips:[]};
+      else if(f.step==="email")r={text:"Megadod az e-mail címed is? Oda küldjük a visszaigazolást.",chips:["Kihagyom"]};
+      else if(f.step==="callback")r={text:"Kérsz visszahívást?",chips:["Igen","Nem"]};
+      else if(f.step==="confirm")r={text:"Összefoglalom:\n**"+d.plan+"** · "+d.slot+"\nNév: "+d.name+"\nTelefon: "+d.phone+(d.email?"\nE-mail: "+d.email:"")+"\nVisszahívás: "+d.callback+"\n\nMehet a foglalás?",chips:["Igen, mehet","Javítok valamit"]};
+      f.chips=r.chips;return r}
+    function flowStep(t){var f=flow,d=f.d,n=norm(t);
+      if(/^(megse|megsem|stop|megszakit|megszuntet)/.test(n)){flow=null;return{text:"Rendben, megszakítottam. Ha később foglalnál, csak szólj.",chips:START}}
+      if(f.step==="plan"){d.plan=/privat|egyeni/.test(n)?"Privát":/eronlet|felkeszit/.test(n)?"Erőnléti felkészítés":/csoport/.test(n)?"Csoportos":"";
+        if(!d.plan)return{text:"Csoportos, privát vagy erőnléti edzésre jönnél?",chips:["Csoportos","Privát","Erőnléti felkészítés"]};f.step="slot";return flowAsk()}
+      if(f.step==="slot"){d.slot=/nem tudom|egyeztes/.test(n)?"egyeztetjük":t.trim().slice(0,80);f.step="name";return flowAsk()}
+      if(f.step==="name"){if(t.trim().length<2)return{text:"Kérlek, írd be a neved.",chips:[]};d.name=t.trim().slice(0,80);f.step="phone";return flowAsk()}
+      if(f.step==="phone"){if(t.replace(/\D/g,"").length<8)return{text:"Ez nem tűnik telefonszámnak. Írd be így: 06 30 123 4567.",chips:[]};d.phone=t.trim().slice(0,40);f.step="email";return flowAsk()}
+      if(f.step==="email"){if(/kihagy|nincs|nem kell|^nem$/.test(n))d.email="";else if(/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(t.trim()))d.email=t.trim();else return{text:"Ez nem tűnik e-mail címnek. Írd be újra, vagy válaszd a Kihagyom gombot.",chips:["Kihagyom"]};f.step="callback";return flowAsk()}
+      if(f.step==="callback"){d.callback=/^nem/.test(n)?"Nem":"Igen";f.step="confirm";return flowAsk()}
+      if(f.step==="confirm"){if(/javit|modosit|nem/.test(n)&&!/mehet/.test(n)){flow={step:"plan",d:{}};return flowAsk()}
+        return submitBooking(d)}
+      return localAnswer(t)}
+    function submitBooking(d){
+      var data={name:d.name,phone:d.phone,email:d.email||"",plan:d.plan,slot:d.slot,callback:d.callback,style:"",level:"",message:"[Chatbot]",website:"",source:location.hostname||"chat"};
+      flow=null;
+      var ok={text:"Kész, rögzítettem a foglalásod, "+d.name+"! Valentin hamarosan keres a "+d.phone+" számon."+(d.email?" A visszaigazolást elküldtük e-mailben.":"")+" Ha 2 napon belül nem jelentkezne, hívd nyugodtan: "+TEL+".",chips:["Mit hozzak?","Hol van a terem?"],cls:"ok"};
+      var bad={text:"Hoppá, a foglalás most nem ment át. Kérlek, hívd Valentint: "+TEL+", vagy használd az oldalon lévő űrlapot.",chips:["Foglalnék edzést"]};
+      if(!SHEET_ENDPOINT)return Promise.resolve(bad);
+      return fetch(SHEET_ENDPOINT,{method:"POST",mode:"no-cors",body:new URLSearchParams(data)}).then(function(){return ok},function(){return bad});
+    }
+
+    /* --- válaszadás: először AI, ha nincs, helyi --- */
+    function reply(text,cb){
+      if(flow){var fr=flowStep(text);return fr&&typeof fr.then==="function"?fr.then(cb):cb(fr)}
+      if(BOOK_RX.test(norm(text))&&aiOff)return cb(startFlow(text));
+      if(aiOff||!SHEET_ENDPOINT){return cb(BOOK_RX.test(norm(text))?startFlow(text):localAnswer(text))}
+      var payload=JSON.stringify({action:"chat",messages:msgs.filter(function(m){return!m.local}).slice(-20).map(function(m){return{role:m.role,text:m.text}})});
+      fetch(SHEET_ENDPOINT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:payload})
+        .then(function(r){return r.json()})
+        .then(function(d){if(d&&d.ok&&d.reply)cb({text:d.reply,cls:d.booked?"ok":"",chips:[]});else{aiOff=true;cb(BOOK_RX.test(norm(text))?startFlow(text):localAnswer(text))}})
+        .catch(function(){aiOff=true;cb(BOOK_RX.test(norm(text))?startFlow(text):localAnswer(text))});
+    }
+    function ask(text){
+      text=String(text||"").trim();if(!text||busy)return;
+      busy=true;send.disabled=true;setChips([]);
+      msgs.push({role:"user",text:text});add("user",text);input.value="";input.style.height="";
+      var t=document.createElement("div");t.className="typing";t.innerHTML="<i></i><i></i><i></i>";body.appendChild(t);body.scrollTop=body.scrollHeight;
+      var started=Date.now();
+      reply(text,function(r){setTimeout(function(){t.remove();msgs.push({role:"assistant",text:r.text,cls:r.cls||""});add("assistant",r.text,r.cls);
+        if(flow)flow.chips=r.chips||[];setChips(r.chips||[]);save();busy=false;send.disabled=false;input.focus()},Math.max(0,450-(Date.now()-started)))});
+    }
+    form.addEventListener("submit",function(e){e.preventDefault();ask(input.value)});
+    input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();ask(input.value)}});
+    input.addEventListener("input",function(){input.style.height="";input.style.height=Math.min(input.scrollHeight,120)+"px"});
+    load();render();
+    if(location.hash==="#chat")open();
+  })();
 
   // header, progress, desktop call bar hides near the booking form
   var hdr=document.querySelector("header"),bar=document.querySelector(".progress"),cb=document.getElementById("callbar"),book=document.getElementById("foglalas");
