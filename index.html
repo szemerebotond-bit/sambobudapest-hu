@@ -289,6 +289,9 @@ fieldset{border:0;padding:0;margin:0;display:grid;gap:9px;min-width:0}
 .seg input:checked+label{background:var(--red);border-color:var(--red);color:#fff}
 .seg input:focus-visible+label{outline:3px solid #fff;outline-offset:2px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cb{display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 16px;border:1.5px solid var(--line);font-weight:700;user-select:none}
+.cb input{width:22px;height:22px;accent-color:var(--red);flex:none}
+.cb:has(input:checked){border-color:var(--red);background:rgba(210,10,10,.1)}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .err{color:#ff6b6b;font-weight:700}
 .done{background:var(--bg);border:2px solid var(--red);padding:22px;display:grid;gap:10px}
@@ -354,7 +357,7 @@ footer .rail{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
 /* reveal (content visible at rest) */
 .rv.in{animation:rise .7s cubic-bezier(.2,.8,.2,1) both}
 </style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SportsActivityLocation", "name": "Sambo Training Budapest – Valentin Evgenievich", "description": "Szambó és kombat szambó edzések Valentin Evgenievich mesteredzővel a Lurdy Házban, Budapesten.", "url": "https://sambobudapest.hu/", "telephone": "+36707741288", "email": "Valentin.Evgenievich@sambo.hu", "image": "https://sambobudapest.hu/hero.jpg", "address": {"@type": "PostalAddress", "streetAddress": "Könyves Kálmán krt. 12–14. (Lurdy Ház, Kathi Béla – THE LEGEND Budapest)", "postalCode": "1097", "addressLocality": "Budapest", "addressCountry": "HU"}, "priceRange": "10 000 – 25 000 Ft", "sport": "Sambo", "employee": {"@type": "Person", "name": "Valentin Evgenievich", "jobTitle": "Sambo mesteredző"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SportsActivityLocation", "name": "Sambo Training Budapest – Valentin Evgenievich", "description": "Szambó és kombat szambó edzések Valentin Evgenievich mesteredzővel a Lurdy Házban, Budapesten.", "url": "https://sambobudapest.hu/", "telephone": "+36707741288", "email": "guda1970@gmail.com", "image": "https://sambobudapest.hu/hero.jpg", "address": {"@type": "PostalAddress", "streetAddress": "Könyves Kálmán krt. 12–14. (Lurdy Ház, Kathi Béla – THE LEGEND Budapest)", "postalCode": "1097", "addressLocality": "Budapest", "addressCountry": "HU"}, "priceRange": "10 000 – 25 000 Ft", "sport": "Sambo", "employee": {"@type": "Person", "name": "Valentin Evgenievich", "jobTitle": "Sambo mesteredző"}}</script>
 </head>
 <body>
 <header>
@@ -581,7 +584,7 @@ footer .rail{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
         <span class="kicker">Foglalás</span>
         <h2>Lépj a <span class="red">szőnyegre.</span></h2>
         <a class="callbig" href="tel:+36707741288"><span>Hívd Valentint</span><strong>06 70 774 1288</strong></a>
-        <div class="b-row"><span class="l">E-mail</span><div class="v"><a href="mailto:Valentin.Evgenievich@sambo.hu">Valentin.Evgenievich@sambo.hu</a><button class="copy" type="button" data-copy="Valentin.Evgenievich@sambo.hu">Másolás</button></div></div>
+        <div class="b-row"><span class="l">E-mail</span><div class="v"><a href="mailto:guda1970@gmail.com">guda1970@gmail.com</a><button class="copy" type="button" data-copy="guda1970@gmail.com">Másolás</button></div></div>
         <div class="b-row"><span class="l">Helyszín</span><div class="v">Lurdy Ház, 1097 Budapest, Könyves Kálmán krt. 12–14.</div></div>
         <div class="steps"><div>Foglalsz</div><div>Valentin visszahív</div><div>Jössz sportruhában</div></div>
       </div>
@@ -611,6 +614,7 @@ footer .rail{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
           <div class="field"><label for="f-level">Tapasztalat</label><select id="f-level"><option>Kezdő</option><option>Volt már küzdősport</option><option>Versenyző</option></select></div>
         </div>
         <div class="field"><label for="f-msg">Üzenet</label><textarea id="f-msg" placeholder="Bármi, amit Valentinnak tudnia kell"></textarea></div>
+        <label class="cb" for="f-cb"><input type="checkbox" id="f-cb" checked> Kérek visszahívást</label>
         <div class="hp" aria-hidden="true"><label for="f-web">Weboldal</label><input id="f-web" type="text" tabindex="-1" autocomplete="off"></div>
         <p class="err" id="err" hidden></p>
         <button class="btn btn-red" type="submit" id="sendBtn">Foglalás elküldése</button>
@@ -660,7 +664,7 @@ footer .rail{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
      A Google Apps Script webalkalmazás URL-je (…/exec). Ide kerülnek a foglalások.
      Ha üres, a foglalás e-mailként megy Valentinnak. */
   var SHEET_ENDPOINT = "";
-  var TO_EMAIL = "Valentin.Evgenievich@sambo.hu";
+  var TO_EMAIL = "guda1970@gmail.com";
 
   var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.getElementById("yr").textContent=new Date().getFullYear();
@@ -708,9 +712,9 @@ footer .rail{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
     var priv=!document.getElementById("p-g").checked;
     var data={name:name,phone:phone,email:email,plan:document.querySelector("input[name=plan]:checked").value,
       slot:priv?(v("f-date").replace(/-/g,".")+" · "+v("f-time")):v("f-slot"),
-      style:v("f-style"),level:v("f-level"),message:v("f-msg"),website:v("f-web"),source:location.hostname||"preview"};
+      callback:document.getElementById("f-cb").checked?"Igen":"Nem",style:v("f-style"),level:v("f-level"),message:v("f-msg"),website:v("f-web"),source:location.hostname||"preview"};
     var body="Szia Valentin!\n\nFoglalnék edzést.\n\nNév: "+data.name+"\nTelefon: "+data.phone+"\n"+(data.email?"E-mail: "+data.email+"\n":"")+
-      "Edzés: "+data.plan+"\nIdőpont: "+data.slot+"\nÉrdeklődés: "+data.style+"\nTapasztalat: "+data.level+"\n"+(data.message?"\nÜzenet:\n"+data.message+"\n":"");
+      "Edzés: "+data.plan+"\nIdőpont: "+data.slot+"\nVisszahívást kér: "+data.callback+"\nÉrdeklődés: "+data.style+"\nTapasztalat: "+data.level+"\n"+(data.message?"\nÜzenet:\n"+data.message+"\n":"");
     var showDone=function(viaSheet){
       document.getElementById("done").hidden=false;btn.hidden=true;
       if(!viaSheet){
